@@ -1,55 +1,54 @@
 import { Router } from 'express'
-
-const users = [{}]
+import { UserModel } from './schema.js';
+import bcrypt from "bcrypt"
 
 const router = Router();
 
-
-const validateReq = (req,res,next)=>{
-    const token = req.headers['authorization']
-    const user = users.find((ele)=>token === ele.token)
-    if(!user){
-     res.status(401).send({message:"unathorized"})
-    }
-    req.user = user
-    next();
+const validateReq = async (req, res, next) => {
+  const token = req.headers['authorization']
+  const user = await UserModel.findOne({ token: token }).lean()
+  if (!user) {
+    return res.status(401).send({ message: "unathorized" })
+  }
+  req.user = user
+  next();
 }
 
 
-router.post('/register',(req,res)=>{
+router.post('/register', async (req, res) => {
+  try {
+
     const usename = req.body.usename;
     const password = req.body.password;
     const email = req.body.email;
-   const user = users.find((ele,index,array)=>usename === ele.usename)
-   if(user){
-   return res.status(400).send({message:"User already exits!!"})
-   }
-   users.push({usename,password,email})
-  return res.status(201).send({message:"User created!!"})
+    const newUser = new UserModel({ password, usename, email })
+    const save = await newUser.save();
+    return res.status(201).send({ save })
+  } catch (error) {
+    return res.status(500).send({ message: error.message })
+  }
 })
 
-router.post('/login',(req,res)=>{
-    const usename = req.body.usename;
-    const password = req.body.password;    
-   const index = users.findIndex((ele,index,array)=>usename === ele.usename && password === ele.password)
-   if(index !==  -1){
-    const token = `${usename}-${password}`
-    users[index].token = token
-    return res.send({message:"You have loged In",token})
-   }
-  return res.status(401).send({message:"Invalid Creds!"})
+router.post('/login', async (req, res) => {
+  const usename = req.body.usename;
+  const password = req.body.password;
+  try {
+    const token = await UserModel.validateUser(usename, password);
+    return res.send({ token })
+  } catch (error) {
+    return res.status(400).send({ message: error.message })
+  }
 })
 
-router.get('/info',validateReq,(req,res)=>{
-    console.log(req.user);
-  return res.send({message:user})
+router.get('/info', validateReq, (req, res) => {
+  console.log(req.user);
+  return res.send({ message: req.user })
 })
 
-router.get('/getEmail',validateReq,(req,res)=>{
-    
-   return res.send({message:user.email})
- })
+router.get('/getEmail', validateReq, (req, res) => {
 
+  return res.send({ message: user.email })
+})
 
 
 
