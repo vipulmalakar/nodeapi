@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "lib": [
+      "es6",
+      "es2016.array.include",
+      "es2017.object",
+      "dom",
+      "ES2020.String"
+    ],
+    "sourceMap": true,
+    "inlineSources": true,
+    "outDir": "dist/",
+    "sourceRoot": "./",
+    "moduleResolution": "node",
+    "skipLibCheck": true,
+    "baseUrl": "./",
+    "paths": {},
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true
+  },
+  "exclude": [
+    "node_modules",
+    "playground.ts"
+  ]
+}

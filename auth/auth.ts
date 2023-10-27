@@ -1,10 +1,15 @@
-import { Router } from 'express'
-import { UserModel } from './schema.js';
-import bcrypt from "bcrypt"
+import { NextFunction, Request, Response, Router } from 'express'
+import { User, UserModel } from './schema.js';
 
-const router = Router();
+declare global {
+  namespace Express {
+    export interface Request {
+      user: User
+    }
+  }
+}
 
-const validateReq = async (req, res, next) => {
+const validateReq = async (req: Request, res: Response, next: NextFunction) => {
   const token = req.headers['authorization']
   const user = await UserModel.findOne({ token: token }).lean()
   if (!user) {
@@ -14,10 +19,11 @@ const validateReq = async (req, res, next) => {
   next();
 }
 
+const router = Router();
 
-router.post('/register', async (req, res) => {
+
+router.post('/register', async (req: Request, res: Response) => {
   try {
-
     const usename = req.body.usename;
     const password = req.body.password;
     const email = req.body.email;
@@ -29,7 +35,7 @@ router.post('/register', async (req, res) => {
   }
 })
 
-router.post('/login', async (req, res) => {
+router.post('/login', async (req: Request, res: Response,) => {
   const usename = req.body.usename;
   const password = req.body.password;
   try {
@@ -40,14 +46,13 @@ router.post('/login', async (req, res) => {
   }
 })
 
-router.get('/info', validateReq, (req, res) => {
+router.get('/info', validateReq, (req: Request, res: Response,) => {
   console.log(req.user);
   return res.send({ message: req.user })
 })
 
-router.get('/getEmail', validateReq, (req, res) => {
-
-  return res.send({ message: user.email })
+router.get('/getEmail', validateReq, (req: Request, res: Response,) => {
+  return res.send({ message: req.user.email })
 })
 
 

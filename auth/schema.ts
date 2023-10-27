@@ -1,13 +1,32 @@
 
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Document, Model, Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 
 import bcrypt from "bcrypt"
 
 const secretKey = "8Xuu09JDjlNLnSLldY5";
 
+export interface User {
+    usename: string,
+    password: string,
+    phoneNo: string
+    email: string,
+    token: string[]
+}
 
-const UserSchema = new Schema({
+interface IUserSchema extends User, Document {
+    hash: (key: 'usename' | 'password' | 'email') => string;
+    createToken: () => string
+}
+
+
+interface IUserModel extends Model<IUserSchema> {
+    validateUser(name: string, password: string): string;
+    findByUsername(username): IUserSchema
+}
+
+
+const UserSchema = new Schema<IUserSchema, IUserModel>({
     usename: { type: String, required: true, unique: true },
     password: { type: String, required: true, },
     email: { type: String, unique: true },
@@ -26,7 +45,7 @@ UserSchema.method('createToken', function () {
 
 
 UserSchema.static('validateUser', async function (name, password) {
-    const user = await this.findOne({ usename: name });
+    const user: IUserSchema = await this.findOne({ usename: name });
     if (!user) {
         throw new Error("Invalid creds")
     }
@@ -40,6 +59,10 @@ UserSchema.static('validateUser', async function (name, password) {
     return token
 });
 
+UserSchema.static('findByUsername', async function (username) {
+    return await this.findOne({ usename: username });
+});
+
 
 UserSchema.pre('save', async function (next) {
     if (this.isModified('password')) {
@@ -49,5 +72,5 @@ UserSchema.pre('save', async function (next) {
     next()
 })
 
-export const UserModel = mongoose.model('user', UserSchema)
+export const UserModel = mongoose.model<Document & IUserSchema, IUserModel>('user', UserSchema)
 
