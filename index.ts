@@ -1,7 +1,6 @@
 import express, { Request, Response } from 'express'
 import AuthRouter from './auth/auth'
 import mongodb from './db/mongodb'
-import { User } from './auth/schema'
 
 
 const app = express()
@@ -16,9 +15,9 @@ app.use(express.json())
 app.use('/auth', AuthRouter)
 
 
-app.get('/', (req: Request, res: Response) => {
+app.get('/', (_: Request, res: Response) => {
 
-  res.send('Hello World!')
+  return res.send('Hello World!')
 })
 
 

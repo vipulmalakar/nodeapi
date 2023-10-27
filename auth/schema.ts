@@ -22,7 +22,7 @@ interface IUserSchema extends User, Document {
 
 interface IUserModel extends Model<IUserSchema> {
     validateUser(name: string, password: string): string;
-    findByUsername(username): IUserSchema
+    findByUsername(username: string): IUserSchema
 }
 
 
@@ -35,7 +35,7 @@ const UserSchema = new Schema<IUserSchema, IUserModel>({
 })
 
 
-UserSchema.method('hash', function (key) {
+UserSchema.method('hash', function (key: 'usename' | 'password' | 'email') {
     return bcrypt.hash(this[key], 10);
 })
 
@@ -45,7 +45,7 @@ UserSchema.method('createToken', function () {
 
 
 UserSchema.static('validateUser', async function (name, password) {
-    const user: IUserSchema = await this.findOne({ usename: name });
+    const user = await this.findOne({ usename: name });
     if (!user) {
         throw new Error("Invalid creds")
     }

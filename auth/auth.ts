@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response, Router } from 'express'
-import { User, UserModel } from './schema.js';
+import { User, UserModel } from './schema';
 
 declare global {
   namespace Express {
@@ -16,7 +16,7 @@ const validateReq = async (req: Request, res: Response, next: NextFunction) => {
     return res.status(401).send({ message: "unathorized" })
   }
   req.user = user
-  next();
+  return next();
 }
 
 const router = Router();
