@@ -22,6 +22,9 @@ const validateReq = async (req: Request, res: Response, next: NextFunction) => {
 const router = Router();
 
 
+router.get('/', async (_: Request, res: Response,) => {
+  return res.status(200).send({ message: "hello from auth" })
+})
 router.post('/register', async (req: Request, res: Response) => {
   try {
     const usename = req.body.usename;
@@ -34,6 +37,8 @@ router.post('/register', async (req: Request, res: Response) => {
     return res.status(500).send({ message: error.message })
   }
 })
+
+
 
 router.post('/login', async (req: Request, res: Response,) => {
   const usename = req.body.usename;

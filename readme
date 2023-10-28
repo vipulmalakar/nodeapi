@@ -1,0 +1,2 @@
+docker command
+docker run -v /Users/akash.malviya/projects/playground/src:/app/src -p 3000:3000 -it --rm app-tag-new
