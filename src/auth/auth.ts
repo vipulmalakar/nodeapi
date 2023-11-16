@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response, Router } from 'express'
 import { User, UserModel } from './schema';
+import { redis } from '../db/redis'
 
 declare global {
   namespace Express {
@@ -9,13 +10,34 @@ declare global {
   }
 }
 
+const rateLimiter = (method: string) => async (req: Request, res: Response, next: NextFunction) => {
+  const ip = req.ip;
+  const key = `${ip}:${method}`
+  const limit = parseInt(await redis.get(key) ?? '0')
+  if (limit >= 10) {
+    return res.status(429).send({ message: "limit exceed" })
+  }
+  await redis.set(key, limit + 1, 'EX', 60)
+  return next();
+}
+
 const validateReq = async (req: Request, res: Response, next: NextFunction) => {
-  const token = req.headers['authorization']
+  const token: string = req.headers['authorization'] ?? ''
+
+  const haveCacheUser = await redis.get(token)
+  if (haveCacheUser) {
+    req.user = JSON.parse(haveCacheUser)
+    return next();
+  }
+
   const user = await UserModel.findOne({ token: token }).lean()
   if (!user) {
     return res.status(401).send({ message: "unathorized" })
   }
-  req.user = user
+
+  await redis.set(token, JSON.stringify(user), 'EX', 10)
+
+  req.user = user;
   return next();
 }
 
@@ -51,12 +73,12 @@ router.post('/login', async (req: Request, res: Response,) => {
   }
 })
 
-router.get('/info', validateReq, (req: Request, res: Response,) => {
+router.get('/info', rateLimiter('info'), validateReq, (req: Request, res: Response,) => {
   console.log(req.user);
   return res.send({ message: req.user })
 })
 
-router.get('/getEmail', validateReq, (req: Request, res: Response,) => {
+router.get('/getEmail', rateLimiter('getEmail'), validateReq, (req: Request, res: Response,) => {
   return res.send({ message: req.user.email })
 })
 
