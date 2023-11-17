@@ -3,6 +3,7 @@ import mongoose, { Document, Model, Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 
 import bcrypt from "bcrypt"
+import { UnAthorizedError } from "../core/error"
 
 const secretKey = "8Xuu09JDjlNLnSLldY5";
 
@@ -47,11 +48,11 @@ UserSchema.method('createToken', function () {
 UserSchema.static('validateUser', async function (name, password) {
     const user = await this.findOne({ usename: name });
     if (!user) {
-        throw new Error("Invalid creds")
+        throw new UnAthorizedError("Invalid creds.")
     }
     const isVerfied = bcrypt.compareSync(password, user.password);
     if (!isVerfied) {
-        throw new Error("Invalid creds")
+        throw new UnAthorizedError("Invalid creds.")
     }
     const token = user.createToken()
     user.token.push(token);
